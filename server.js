@@ -2,7 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const fs = require('fs')
 const path = require('path')
-const { PORT = 3333 } = process.env
+const {PORT = 3333} = process.env
 
 
 const app = express()
@@ -38,10 +38,10 @@ const purchaseBread = (userId, breadId, purchaseQuantity) => {
   const breadInStock = bread.qty > purchaseQuantity
 
   if (!breadInStock) {
-    return { error: 'There\'s not enough of these products!', breadId, userId }
+    return {error: 'There\'s not enough of these products!', id: breadId}
   }
   if (!canAfford) {
-    return { error: 'User can\'t afford that product!', userId, breadId }
+    return {error: 'User can\'t afford that product!', id: breadId}
   }
   bread.qty -= purchaseQuantity;
   user.credits -= (bread.price * purchaseQuantity)
@@ -51,8 +51,9 @@ const purchaseBread = (userId, breadId, purchaseQuantity) => {
   } else {
     user.items.push({id: breadId, qty: purchaseQuantity})
   }
-  return true
+  return {msg: `Purchase of bread #${breadId} successful!`, id: breadId}
 }
+
 const sellBread = (userId, breadId, saleQuantity) => {
   console.log(`attempting to sell bread#${breadId} in quantity ${saleQuantity} from user ${userId}`)
   const [user] = users.filter(u => u.id === userId)
@@ -63,7 +64,7 @@ const sellBread = (userId, breadId, saleQuantity) => {
   }
   const salePrice = bread.price
   bread.qty += saleQuantity
-  user.credits +=  salePrice * saleQuantity
+  user.credits += salePrice * saleQuantity
   breadInUsersStock.qty -= saleQuantity
   user.items = user.items.filter(i => i.qty > 0)
   return user.items
@@ -81,7 +82,7 @@ app.get('/breads', (req, res) => {
 })
 
 app.post('/user', (req, res) => {
-  const { username } = req.body
+  const {username} = req.body
   if (!username) {
     return res.status(500).json({error: 'Must provide username!'})
   }
@@ -99,6 +100,7 @@ app.post('/user', (req, res) => {
   users.push(newUser)
   res.json(newUser)
 })
+
 app.get('/user/:userId', (req, res) => {
   if (!req.params.userId) {
     return res.status(500).json({error: 'Please do not forget to supply an user ID!'})
@@ -111,7 +113,7 @@ app.get('/user/:userId', (req, res) => {
 })
 
 app.post('/buy', (req, res) => {
-  const { purchases, userId } = req.body
+  const {purchases, userId} = req.body
   if (!userId || !users.filter(u => u.id === userId).length) {
     return res.status(403).json({error: 'Invalid user id!'})
   }
@@ -119,11 +121,12 @@ app.post('/buy', (req, res) => {
     return res.status(403).json({error: 'Come on, add at least something into your cart!'})
   }
   const committedBuys = purchases.map(p => purchaseBread(userId, p.id, p.qty))
-  return res.status(200).json({purchases: committedBuys, items: users.filter(u => u.id === userId)[0].items})
+  const user = users.filter(u => u.id === userId)[0]
+  return res.status(200).json({purchases: committedBuys, items: user.items, credits: user.credits})
 })
 
 app.post('/sell', (req, res) => {
-  const { id, qty, userId } = req.body
+  const {id, qty, userId} = req.body
   if (!userId || !users.filter(u => u.id === userId).length) {
     return res.status(403).json({error: 'Invalid user id!'})
   }
