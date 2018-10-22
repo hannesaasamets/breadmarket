@@ -4,8 +4,12 @@ const fs = require('fs')
 const path = require('path')
 const {PORT = 3333} = process.env
 
-
 const app = express()
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+})
 app.use(bodyParser.json())
 
 let users = []

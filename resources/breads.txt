@@ -2,7 +2,7 @@ Aish Merahrah
 Ajdov Kruh
 Anadama bread
 Anpan
-Appam \"Hoppers\"
+Appam "Hoppers"
 Arepa
 Baba
 Bagel
@@ -76,7 +76,7 @@ Hardebrood
 Hardtack
 Himbasha
 Injera
-Johnnycake or Hoecake
+Johnnycake
 Ka'ak
 Kalach
 Kaya toast
@@ -92,7 +92,7 @@ Laobing
 Lavash
 Lefse
 Malooga
-Maltese bread’’Ħobż tal-Malti’’
+Maltese bread
 Mantou
 Markook
 Marraqueta
@@ -100,7 +100,7 @@ Matzo
 Melonpan
 Miche
 Michetta
-Milk Loaf, Milk Bread
+Milk Loaf
 Mollete
 Montreal-style bagel
 Naan
@@ -137,7 +137,7 @@ Potbrood
 Pretzel
 Proja
 Pumpernickel
-Puran Poli, also called Obbatu, Bobbatlu, Bakshalu
+Puran Poli
 Qistibi
 Quick bread
 Rewena bread
@@ -160,7 +160,7 @@ Sourdough bread
 Speckendick
 Spelt bread
 Sprouted bread
-Taboon bread or Laffa
+Taboon bread
 Taftan
 Tandoor bread
 Teacake
