@@ -55,13 +55,14 @@
           <p class="credits">You have {{ formatFinancial(user.credits) }} €</p>
         </div>
       </div>
+      <p class="timeLeft" :style="timeLeftStyles">
+        The market day ends in {{ secondsRemaining }} seconds</p>
     </div>
-    <p class="timeLeft">The day ends in {{ secondsRemaining }} seconds</p>
   </div>
 </template>
 
 <script>
-  /* eslint-disable */
+/* eslint-disable */
   import HelloWorld from './components/HelloWorld';
 
   export default {
@@ -76,7 +77,7 @@
         user: {},
         breads: [],
         nextUpdate: Number,
-        secondsRemaining: 60,
+        secondsRemaining: 59,
       };
     },
     mounted() {
@@ -115,6 +116,7 @@
           this.breads = res.breads;
         });
       },
+      //TODO: if item is out of stock, don't fetch
       buy(bread) {
         this.post(
           'buy',
@@ -127,10 +129,12 @@
               },
             ],
           },
-        ).then(res => this.updateUser(this.user.id));
+        ).then(res => {
+          res.purchases.forEach(purhcasedItem => this.breads.find(bread => bread.id === purhcasedItem.id).qty = purhcasedItem.qty);
+          this.updateUser(this.user.id)
+        });
       },
       sell(bread) {
-        console.log(bread)
         this.post(
           'sell',
           {
@@ -139,7 +143,11 @@
             "qty": 1, // How much of the bread you wish to sell
           },
           //TODO: sell returns user, so update it with the return value here
-        ).then(res => this.updateUser(this.user.id));
+        ).then(res => {
+          this.user.credits = res.credits;
+          this.user.items = res.items;
+          this.updateBreads()
+        });
       },
       // TODO: move get and post to a rest module and make them return the promise or error
       post(target, requestBody) {
@@ -175,6 +183,12 @@
               id: bread.id,
             }
           });
+        }
+      },
+      timeLeftStyles() {
+        if (this.secondsRemaining < 10) {
+          // TODO: tween the red
+          return { color: 'rgb(255, 0, 0)' };
         }
       },
     },
@@ -247,5 +261,6 @@
       padding: 1rem 0;
       border-bottom: 1px dashed #dadada;
     }
+
   }
 </style>
