@@ -6,50 +6,62 @@
       <button @click="createUser()">createUser</button>
     </div>
     <div v-else>
-      Hello, {{ user.name }}!
+      <p>Hello, {{ user.name }}!</p>
 
-      <div style="display: flex;">
+      <div class="tables-container">
         <div>
           <h2>Bread market</h2>
-          <table class="table" style="text-align: left">
-            <tr>
-              <th>Qty</th>
-              <th>Bread</th>
-              <th>Price</th>
-            </tr>
-            <tr
-              v-for="(bread, index) in breads"
-              :key="index"
-              @click="buy(bread)"
-            >
-              <td>{{ bread.qty }}</td>
-              <td>{{ bread.name }}</td>
-              <td>{{ bread.price }} €</td>
-            </tr>
-          </table>
+          <p class="small-font">Click on an item to buy</p>
+          <div class="scroll-wrapper">
+            <table class="table" style="text-align: left">
+              <tr>
+                <th>Qty</th>
+                <th>Bread</th>
+                <th>Price</th>
+              </tr>
+              <tr
+                v-for="(bread, index) in breads"
+                :key="index"
+                @click="buy(bread)"
+              >
+                <td>{{ bread.qty }}</td>
+                <td>{{ bread.name }}</td>
+                <td>{{ formatFinancial(bread.price) }} €</td>
+              </tr>
+            </table>
+          </div>
         </div>
         <div>
           <h2>Your items</h2>
-          <table class="table" style="text-align: left">
-            <tr>
-              <th>Qty</th>
-              <th>Bread</th>
-              <th>Price</th>
-            </tr>
-            <tr v-for="(bread, index) in user.items" :key="index">
-              <td>{{ bread.qty }}</td>
-              <td>{{ bread.name }}</td>
-              <td>{{ bread.price }} €</td>
-            </tr>
-          </table>
+          <p class="small-font">Click on an item to sell</p>
+          <div class="scroll-wrapper">
+            <table class="table items" style="text-align: left">
+              <tr>
+                <th>Qty</th>
+                <th>Bread</th>
+                <th>Price</th>
+              </tr>
+              <tr
+                v-for="(myBread, index) in myItems"
+                :key="index"
+                @click="sell(myBread)"
+              >
+                <td>{{ myBread.qty }}</td>
+                <td>{{ myBread.name }}</td>
+                <td>{{ myBread.price }} €</td>
+              </tr>
+            </table>
+          </div>
+          <p class="credits">You have {{ formatFinancial(user.credits) }} €</p>
         </div>
       </div>
     </div>
+    <p class="timeLeft">The day ends in {{ secondsRemaining }} seconds</p>
   </div>
 </template>
 
 <script>
-/* eslint-disable */
+  /* eslint-disable */
   import HelloWorld from './components/HelloWorld';
 
   export default {
@@ -63,35 +75,75 @@
         source: 'http://localhost:3333',
         user: {},
         breads: [],
+        nextUpdate: Number,
+        secondsRemaining: 60,
       };
     },
     mounted() {
       const userId = localStorage.getItem('userId');
-      if (userId) this.fetchUser(userId);
-      this.get('breads', res => this.breads = res);
+      if (userId) this.updateUser(userId);
+      this.updateBreads();
+
+      const timer = setInterval(() => {
+        const now = new Date().getTime();
+        this.secondsRemaining = -Math.round((now - this.nextUpdate) / 1000);
+        if (this.secondsRemaining <= 0) {
+          this.updateBreads();
+        }
+      }, 200);
     },
     methods: {
+      formatFinancial(price) {
+        return Number.parseFloat(price).toFixed(2);
+      },
       createUser() {
         this.post(
           'user',
           { username: this.userName },
-          res => {
-            this.user = res;
-            if (res.id) localStorage.setItem('userId', res.id);
-          },
-        );
+        ).then(res => {
+          this.user = res;
+          if (res.id) localStorage.setItem('userId', res.id);
+        });
       },
-      fetchUser(id) {
-        this.get(
-          'user/' + id,
-          res => this.user = res
-        );
+      updateUser(id) {
+        this.get('user/' + id).then(res => this.user = res);
+      },
+      updateBreads() {
+        this.get('breads').then(res => {
+          const now = new Date().getTime();
+          this.nextUpdate = now + res.nextUpdate;
+          this.breads = res.breads;
+        });
       },
       buy(bread) {
-
+        this.post(
+          'buy',
+          {
+            "userId": this.user.id, // The name of the user making the purchase
+            "purchases": [
+              {
+                "id": bread.id, // ID of bread
+                "qty": 1, // How much of the bread you wish to buy
+              },
+            ],
+          },
+        ).then(res => this.updateUser(this.user.id));
       },
-      post(target, requestBody, responseHandler) {
-        fetch(this.source + '/' + target,
+      sell(bread) {
+        console.log(bread)
+        this.post(
+          'sell',
+          {
+            "userId": this.user.id, // The name of the user making the purchase
+            "id": bread.id, // ID of bread
+            "qty": 1, // How much of the bread you wish to sell
+          },
+          //TODO: sell returns user, so update it with the return value here
+        ).then(res => this.updateUser(this.user.id));
+      },
+      // TODO: move get and post to a rest module and make them return the promise or error
+      post(target, requestBody) {
+        return fetch(this.source + '/' + target,
           {
             method: 'post', // *GET, POST, PUT, DELETE, etc.
             mode: 'cors', // no-cors, cors, *same-origin
@@ -103,14 +155,27 @@
           },
         )
           .then(stream => stream.json())
-          .then(responseHandler)
           .catch(error => console.error(error));
       },
-      get(target, responseHandler) {
-        fetch(this.source + '/' + target)
+      get(target) {
+        return fetch(this.source + '/' + target)
           .then(stream => stream.json())
-          .then(responseHandler)
           .catch(error => console.error(error));
+      },
+    },
+    computed: {
+      myItems() {
+        if (this.breads.length && this.user.items) {
+          return this.user.items.map(myBread => {
+            const bread = this.breads.find(bread => bread.id === myBread.id);
+            return {
+              qty: myBread.qty,
+              name: bread.name,
+              price: this.formatFinancial(bread.price),
+              id: bread.id,
+            }
+          });
+        }
       },
     },
   };
@@ -130,11 +195,57 @@
       padding: 1rem;
     }
 
+    .small-font {
+      font-size: .8em;
+      color: gray;
+    }
+
+    .credits {
+      color: #5c5;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .scroll-wrapper {
+      max-height: 55vh;
+      overflow: auto;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+      box-shadow: inset 0px 10px 20px -10px rgba(0,0,0, .05),
+      inset 0px -10px 20px -10px rgba(0,0,0, .05);
+    }
+
     .table {
-      tr:hover td {
+      th, td {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      td:last-child {
+        text-align: right;
+      }
+      tr:not(:first-child):hover {
         background-color: aliceblue;
         cursor: pointer;
       }
+      &.items tr:hover td {
+        background-color: lightgoldenrodyellow;
+      }
+    }
+
+    .tables-container {
+      display: flex;
+      justify-content: center;
+
+      & > :not(:last-child) {
+        margin-right: 4rem;
+      }
+    }
+
+    .timeLeft {
+      margin: 4rem 12%;
+      border-top: 1px dashed #dadada;
+      padding: 1rem 0;
+      border-bottom: 1px dashed #dadada;
     }
   }
 </style>

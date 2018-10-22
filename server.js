@@ -2,7 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const fs = require('fs')
 const path = require('path')
-const { PORT = 3333 } = process.env
+const {PORT = 3333} = process.env
 
 
 const app = express()
@@ -57,7 +57,7 @@ const purchaseBread = (userId, breadId, purchaseQuantity) => {
     } else {
         user.items.push({id: breadId, qty: purchaseQuantity})
     }
-    return true
+    return bread
 }
 const sellBread = (userId, breadId, saleQuantity) => {
     console.log(`attempting to sell bread#${breadId} in quantity ${saleQuantity} from user ${userId}`)
