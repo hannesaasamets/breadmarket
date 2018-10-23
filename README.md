@@ -31,15 +31,18 @@ npm test
 
 ## API endpoints
 #### GET `/breads`:
-Returns all breads:
+Returns all breads and time remaining until next update:
 ```
-[{
-    id: Number,
-    name: String,
-    qty: Number, // 0-100
-    price: Number // 0.1 to 10
-}, 
-...]
+{
+  breads: 
+  [{
+      id: Number,
+      name: String,
+      qty: Number, // 0-100
+      price: Number // 0.1 to 10
+  }, 
+  ...],
+  nextUpdate: Number // Milliseconds until next update
 ```
 #### POST `/user`:
 Creates a new user with the following request:
