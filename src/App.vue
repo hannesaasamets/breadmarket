@@ -1,10 +1,10 @@
 <template>
-  <div id="app">
-    <div v-if="!user.id">
+  <div id="app" class="breadmarket">
+    <form v-if="!user.id">
       <label for="username">Enter a user name</label>
       <input v-model="userName" id="username"/>
-      <button @click="createUser()">createUser</button>
-    </div>
+      <button @click="createUser()">Create user</button>
+    </form>
     <div v-else>
       <p>Hello, {{ user.name }}!</p>
 
@@ -55,7 +55,7 @@
           <p class="credits">You have {{ formatFinancial(user.credits) }} €</p>
         </div>
       </div>
-      <p class="timeLeft" :style="timeLeftStyles">
+      <p class="timer" :style="timeLeftStyles">
         The market day ends in {{ secondsRemaining }} seconds</p>
     </div>
   </div>
@@ -63,21 +63,18 @@
 
 <script>
 /* eslint-disable */
-  import HelloWorld from './components/HelloWorld';
+  import { get, post } from './rest.js';
 
   export default {
     name: 'App',
-    components: {
-      HelloWorld,
-    },
     data() {
       return {
-        userName: 'jj',
-        source: 'http://localhost:3333',
+        userName: '',
         user: {},
         breads: [],
         nextUpdate: Number,
         secondsRemaining: 59,
+        timer: null,
       };
     },
     mounted() {
@@ -85,7 +82,7 @@
       if (userId) this.updateUser(userId);
       this.updateBreads();
 
-      const timer = setInterval(() => {
+      this.timer = setInterval(() => {
         const now = new Date().getTime();
         this.secondsRemaining = -Math.round((now - this.nextUpdate) / 1000);
         if (this.secondsRemaining <= 0) {
@@ -93,24 +90,26 @@
         }
       }, 200);
     },
+    beforeDestroy() {
+      clearInterval(this.timer);
+    },
     methods: {
       formatFinancial(price) {
         return Number.parseFloat(price).toFixed(2);
       },
       createUser() {
-        this.post(
-          'user',
-          { username: this.userName },
-        ).then(res => {
+        post('user', { username: this.userName }).then(res => {
           this.user = res;
-          if (res.id) localStorage.setItem('userId', res.id);
+          if (res.id) {
+            localStorage.setItem('userId', res.id)
+          }
         });
       },
       updateUser(id) {
-        this.get('user/' + id).then(res => this.user = res);
+        get('user/' + id).then(res => this.user = res);
       },
       updateBreads() {
-        this.get('breads').then(res => {
+        get('breads').then(res => {
           const now = new Date().getTime();
           this.nextUpdate = now + res.nextUpdate;
           this.breads = res.breads;
@@ -118,7 +117,7 @@
       },
       //TODO: if item is out of stock, don't fetch
       buy(bread) {
-        this.post(
+        post(
           'buy',
           {
             "userId": this.user.id, // The name of the user making the purchase
@@ -135,40 +134,19 @@
         });
       },
       sell(bread) {
-        this.post(
+        post(
           'sell',
           {
             "userId": this.user.id, // The name of the user making the purchase
             "id": bread.id, // ID of bread
             "qty": 1, // How much of the bread you wish to sell
           },
-          //TODO: sell returns user, so update it with the return value here
         ).then(res => {
+          //TODO: sell returns user, so update it with the return value here
           this.user.credits = res.credits;
           this.user.items = res.items;
           this.updateBreads()
         });
-      },
-      // TODO: move get and post to a rest module and make them return the promise or error
-      post(target, requestBody) {
-        return fetch(this.source + '/' + target,
-          {
-            method: 'post', // *GET, POST, PUT, DELETE, etc.
-            mode: 'cors', // no-cors, cors, *same-origin
-            cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody), // body data type must match "Content-Type" header
-          },
-        )
-          .then(stream => stream.json())
-          .catch(error => console.error(error));
-      },
-      get(target) {
-        return fetch(this.source + '/' + target)
-          .then(stream => stream.json())
-          .catch(error => console.error(error));
       },
     },
     computed: {
@@ -186,9 +164,13 @@
         }
       },
       timeLeftStyles() {
+        // TODO: tween the red
         if (this.secondsRemaining < 10) {
-          // TODO: tween the red
-          return { color: 'rgb(255, 0, 0)' };
+          const percent = (10 - this.secondsRemaining) / 10;
+          const startRGB = [44, 62, 80];
+          const endRGB = [255, 0, 0];
+          const curRGB = startRGB.map((c, index) => c + (endRGB[index] - c) * percent );
+          return { color: `rgb(${curRGB.join(',')})` };
         }
       },
     },
@@ -196,7 +178,7 @@
 </script>
 
 <style lang="scss">
-  #app {
+  .breadmarket {
     font-family: "Avenir", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -204,7 +186,13 @@
     color: #2c3e50;
     margin-top: 60px;
 
-    input, button {
+    label {
+      display: block;
+      font-size: 1.5em;
+    }
+
+    input,
+    button {
       font-size: 2rem;
       padding: 1rem;
     }
@@ -255,7 +243,7 @@
       }
     }
 
-    .timeLeft {
+    .timer {
       margin: 4rem 12%;
       border-top: 1px dashed #dadada;
       padding: 1rem 0;
