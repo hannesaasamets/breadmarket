@@ -1,10 +1,20 @@
 # Breadmarket
-# vol 2
 > A Vue.js project
+
+## Develop in Codesandbox
+https://codesandbox.io/s/github/hannesaasamets/breadmarket
+
+## Public API
+https://lasn.ee/market/breads
 
 ## Start the server
 ```bash
 npm run server
+```
+
+## Run Backend locally
+```bash
+node server.js
 ```
 
 ## Build Setup
