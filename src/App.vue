@@ -3,7 +3,7 @@
     <form v-if="!user.id">
       <label for="username">Enter a user name</label>
       <input v-model="userName" id="username"/>
-      <button @click="createUser()">Create user</button>
+      <button @click="createUser(userName)">Create user</button>
     </form>
     <div v-else>
       <p>Hello, {{ user.name }}!</p>
@@ -46,9 +46,7 @@
                 :key="index"
                 @click="sell(myBread)"
               >
-                <td>{{ myBread.qty }}</td>
-                <td>{{ myBread.name }}</td>
-                <td>{{ myBread.price }} €</td>
+                <!-- display user items -->
               </tr>
             </table>
           </div>
@@ -63,7 +61,7 @@
 
 <script>
 /* eslint-disable */
-  import { get, post } from './rest.js';
+  // TODO: import `get` and `post` from rest.js
 
   export default {
     name: 'App',
@@ -78,16 +76,15 @@
       };
     },
     mounted() {
-      const userId = localStorage.getItem('userId');
-      if (userId) this.updateUser(userId);
-      this.updateBreads();
+      //TODO: See if we have a user in localStorage and run updateUser with that ID
+
+      //TODO: update the list of breads when the app starts
 
       this.timer = setInterval(() => {
         const now = new Date().getTime();
         this.secondsRemaining = -Math.round((now - this.nextUpdate) / 1000);
-        if (this.secondsRemaining <= 0) {
-          this.updateBreads();
-        }
+
+        // TODO: Get the list of breads upon a new day
       }, 200);
     },
     beforeDestroy() {
@@ -95,28 +92,30 @@
     },
     methods: {
       formatFinancial(price) {
+        // format a number to two decimal points, returns a String
         return Number.parseFloat(price).toFixed(2);
       },
-      createUser() {
-        post('user', { username: this.userName }).then(res => {
-          this.user = res;
-          if (res.id) {
-            localStorage.setItem('userId', res.id)
+      createUser(userName) {
+        post('user', { username: userName }).then(response => {
+          this.user = response;
+          if (response.id) {
+            localStorage.setItem('userId', response.id)
           }
         });
       },
       updateUser(id) {
-        get('user/' + id).then(res => this.user = res);
+        get('user/' + id).then(response => this.user = response);
       },
       updateBreads() {
-        get('breads').then(res => {
+        get('breads').then(response => {
           const now = new Date().getTime();
-          this.nextUpdate = now + res.nextUpdate;
-          this.breads = res.breads;
+          this.nextUpdate = now + response.nextUpdate;
+          this.breads = response.breads;
         });
       },
-      //TODO: if item is out of stock, don't fetch
       buy(bread) {
+        //TODO: if item is out of stock, don't fetch
+
         post(
           'buy',
           {
@@ -128,8 +127,8 @@
               },
             ],
           },
-        ).then(res => {
-          res.purchases.forEach(purhcasedItem => this.breads.find(bread => bread.id === purhcasedItem.id).qty = purhcasedItem.qty);
+        ).then(response => {
+          response.purchases.forEach(purhcasedItem => this.breads.find(bread => bread.id === purhcasedItem.id).qty = purhcasedItem.qty);
           this.updateUser(this.user.id)
         });
       },
@@ -137,22 +136,24 @@
         post(
           'sell',
           {
-            "userId": this.user.id, // The name of the user making the purchase
+            "userId": this.user.id, // The id of the user making the purchase
             "id": bread.id, // ID of bread
             "qty": 1, // How much of the bread you wish to sell
           },
-        ).then(res => {
-          //TODO: sell returns user, so update it with the return value here
-          this.user.credits = res.credits;
-          this.user.items = res.items;
-          this.updateBreads()
+        ).then(response => {
+          //TODO: "sell" request returns the updated user info, so update the local value
+          //TODO: "sell" does not return the new market situation, so we need to fetch all the breads
         });
       },
     },
     computed: {
       myItems() {
+        // if the user has items and the list of breads is available
         if (this.breads.length && this.user.items) {
+          // iterate over every item of the user
           return this.user.items.map(myBread => {
+            // the user bread (myBread) contains just the id,
+            // so find the full info for that bread from the full list of breads
             const bread = this.breads.find(bread => bread.id === myBread.id);
             return {
               qty: myBread.qty,
@@ -164,14 +165,7 @@
         }
       },
       timeLeftStyles() {
-        // TODO: tween the red
-        if (this.secondsRemaining < 10) {
-          const percent = (10 - this.secondsRemaining) / 10;
-          const startRGB = [44, 62, 80];
-          const endRGB = [255, 0, 0];
-          const curRGB = startRGB.map((c, index) => c + (endRGB[index] - c) * percent );
-          return { color: `rgb(${curRGB.join(',')})` };
-        }
+        // TODO: show red when less than 10 seconds remaining
       },
     },
   };

@@ -1,3 +1,4 @@
+/* eslint-disable */
 const base_url = 'http://localhost:3333';
 
 export function post(target, requestBody) {
