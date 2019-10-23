@@ -4,39 +4,22 @@
 ## Develop in Codesandbox
 https://codesandbox.io/s/github/hannesaasamets/breadmarket
 
-## Public API
-https://lasn.ee/market/breads
+## Run Back-End
+You need to have Node installed.
 
-## Start the server
-```bash
-npm run server
-```
-
-## Run Backend locally
 ```bash
 node server.js
 ```
 
-## Build Setup
+## Run Front-End
+You need to have npm installed (Node Package Manager).
 
 ``` bash
-# install dependencies
+# install project dependencies
 npm install
 
-# serve with hot reload at localhost:8080
+# serve Front-End with hot reload at localhost:8080
 npm run dev
-
-# build for production with minification
-npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
-
-# run unit tests
-npm run unit
-
-# run all tests
-npm test
 ```
 
 ## API endpoints

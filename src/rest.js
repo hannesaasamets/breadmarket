@@ -1,8 +1,7 @@
-/* eslint-disable */
-const base_url = 'http://localhost:3333';
+const baseUrl = 'http://localhost:3333';
 
 export function post(target, requestBody) {
-  return fetch(base_url + '/' + target,
+  return fetch(baseUrl + '/' + target,
     {
       method: 'post', // *GET, POST, PUT, DELETE, etc.
       mode: 'cors', // no-cors, cors, *same-origin
@@ -18,7 +17,7 @@ export function post(target, requestBody) {
 }
 
 export function get(target) {
-  return fetch(base_url + '/' + target)
+  return fetch(baseUrl + '/' + target)
     .then(stream => stream.json())
     .catch(error => console.error(error));
 }
