@@ -2,23 +2,25 @@
 > A Vue.js project
 
 ## Develop in Codesandbox
+Back-End can be run online:  
+https://codesandbox.io/s/cool-dust-mc97i
+
+Front-End can be developped online:  
 https://codesandbox.io/s/github/hannesaasamets/breadmarket
 
-## Run Back-End
-You need to have Node installed.
-
+## Develop locally
+1. Install project dependencies. Presumes you have npm installed (Node Package Manager).
 ```bash
-node server.js
+npm install
 ```
 
-## Run Front-End
-You need to have npm installed (Node Package Manager).
+2. Run the Back-end. Presumes you have Node installed. 
+```bash
+node server.js
+``` 
 
+3. Run the Front-End with hot reload at localhost:8080.
 ``` bash
-# install project dependencies
-npm install
-
-# serve Front-End with hot reload at localhost:8080
 npm run dev
 ```
 
