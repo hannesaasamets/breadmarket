@@ -1,52 +1,206 @@
 <template>
   <div id="app" class="breadmarket">
-    <login-view
-      v-if="!user.id"
-      @user="user = $event"
-    />
-    <bread-market
-      v-else
-      :user="user"
-    />
+    <form v-if="!user.id">
+      <label for="username">Enter a user name</label>
+      <input v-model="userName" id="username"/>
+      <button @click.prevent="createUser(userName)">Create user</button>
+    </form>
+    <div v-else>
+      <p>Hello, {{ user.name }}!</p>
+
+      <div class="tables-container">
+        <div>
+          <h2>Bread market</h2>
+          <p class="small-font">Click on an item to buy</p>
+          <div class="scroll-wrapper">
+            <table class="table" style="text-align: left">
+              <tr>
+                <th>Qty</th>
+                <th>Bread</th>
+                <th>Price</th>
+              </tr>
+              <tr
+                v-for="(bread, index) in breads"
+                :key="index"
+                @click="buy(bread)"
+              >
+                <td>{{ bread.qty }}</td>
+                <td>{{ bread.name }}</td>
+                <td>{{ formatFinancial(bread.price) }} €</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h2>Your items</h2>
+          <p class="small-font">Click on an item to sell</p>
+          <div class="scroll-wrapper">
+            <table class="table items" style="text-align: left">
+              <tr>
+                <th>Qty</th>
+                <th>Bread</th>
+                <th>Price</th>
+              </tr>
+              <tr
+                v-for="(myBread, index) in myItems"
+                :key="index"
+                @click="sell(myBread)"
+              >
+                <!-- display user items -->
+                <td
+                  v-for="col in Object.values(myBread)"
+                  :key="col.id"
+                >
+                  {{ col }}
+                </td>
+              </tr>
+            </table>
+          </div>
+          <p class="credits">You have {{ formatFinancial(user.credits) }} €</p>
+        </div>
+      </div>
+      <p class="timer" :style="timeLeftStyles">
+        The market day ends in {{ secondsRemaining }} seconds</p>
+    </div>
   </div>
 </template>
 
 <script>
-/* eslint-disable */
+  /* eslint-disable */
   // TODO: import `get` and `post` from rest.js
   import { get, post } from './rest';
-  import LoginView from './views/login.vue';
-  import BreadMarket from './views/market.vue';
-  import UserMixin from './mixins/user';
 
   export default {
     name: 'App',
-    components: {
-      LoginView,
-      BreadMarket,
-    },
-    mixins: [
-      UserMixin,
-    ],
     data() {
       return {
         userName: '',
         user: {},
+        breads: [],
+        nextUpdate: Number,
+        secondsRemaining: 59,
+        timer: null,
       };
     },
     mounted() {
       //TODO: See if we have a user in localStorage and run updateUser with that ID
       const userId = localStorage.getItem('userId');
-      if (userId) {
-        this.updateUser(userId);
-      }
+
+      //TODO: update the list of breads when the app starts
+      userId && this.updateUser(userId);
+
+      this.updateBreads();
+
+      this.timer = setInterval(() => {
+        const now = new Date().getTime();
+        this.secondsRemaining = -Math.round((now - this.nextUpdate) / 1000);
+
+        // TODO: Get the list of breads upon a new day
+        if (this.secondsRemaining <= 0) {
+          this.updateBreads();
+        }
+      }, 200);
+    },
+    beforeDestroy() {
+      clearInterval(this.timer);
+    },
+    methods: {
+      formatFinancial(price) {
+        // format a number to two decimal points, returns a String
+        return Number.parseFloat(price).toFixed(2);
+      },
+      createUser(userName) {
+        post('user', { username: userName }).then(response => {
+          this.user = response;
+          if (response.id) {
+            localStorage.setItem('userId', response.id)
+          }
+        });
+      },
+      updateUser(id) {
+        get('user/' + id).then(response => this.user = response);
+      },
+      updateBreads() {
+        get('breads').then(response => {
+          const now = new Date().getTime();
+          this.nextUpdate = now + response.nextUpdate;
+          this.breads = response.breads;
+        });
+      },
+      buy(bread) {
+        //TODO: if item is out of stock, don't fetch
+
+        post(
+          'buy',
+          {
+            "userId": this.user.id, // The name of the user making the purchase
+            "purchases": [
+              {
+                "id": bread.id, // ID of bread
+                "qty": 1, // How much of the bread you wish to buy
+              },
+            ],
+          },
+        ).then(response => {
+          response.purchases.forEach(purhcasedItem => {
+            const breadOnTheMarket = this.breads.find(bread =>
+              bread.id === purhcasedItem.id
+            );
+
+            if (breadOnTheMarket) {
+              bread.qty = purhcasedItem.qty
+            }
+          });
+          this.updateUser(this.user.id)
+        });
+      },
+      sell(bread) {
+        post(
+          'sell',
+          {
+            "userId": this.user.id, // The id of the user making the purchase
+            "id": bread.id, // ID of bread
+            "qty": 1, // How much of the bread you wish to sell
+          },
+        ).then(response => {
+          //TODO: "sell" request returns the updated user info, so update the local value
+          this.user.credits = response.credits;
+          this.user.items = response.items;
+
+          //TODO: "sell" does not return the new market situation, so we need to fetch all the breads
+          this.updateBreads();
+        });
+      },
+    },
+    computed: {
+      myItems() {
+        // if the user has items and the list of breads is available
+        if (this.breads.length && this.user.items) {
+          // iterate over every item of the user
+          return this.user.items.map(myBread => {
+            // the user bread (myBread) contains just the id,
+            // so find the full info for that bread from the full list of breads
+            const bread = this.breads.find(bread => bread.id === myBread.id);
+            return {
+              qty: myBread.qty,
+              name: bread.name,
+              price: this.formatFinancial(bread.price),
+              id: bread.id,
+            }
+          });
+        }
+      },
+      timeLeftStyles() {
+        // TODO: show red when less than 10 seconds remaining
+        if (this.secondsRemaining < 10) {
+          return { color: 'red' };
+        }
+      },
     },
   };
 </script>
 
-<style
-  lang="scss"
->
+<style lang="scss">
   .breadmarket {
     font-family: "Avenir", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -54,6 +208,17 @@
     text-align: center;
     color: #2c3e50;
     margin-top: 60px;
+
+    label {
+      display: block;
+      font-size: 1.5em;
+    }
+
+    input,
+    button {
+      font-size: 2rem;
+      padding: 1rem;
+    }
 
     .small-font {
       font-size: .8em;
