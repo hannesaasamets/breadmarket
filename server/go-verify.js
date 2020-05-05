@@ -33,7 +33,7 @@ const getScores = (req, res) =>
       if (err) throw err;
       const collapsedVisits = collapseDuplicates(visits);
       const resJson = collapsedVisits
-        .map(({ score, browser, os, duplicates, userName }) => (
+        .map(({ score, browser, os, duplicates }) => (
           {
             score,
             browser,
@@ -41,7 +41,6 @@ const getScores = (req, res) =>
             ...(duplicates > 1 && {
               duplicates,
             }),
-            userName,
           }
         ));
       res.json(resJson);
