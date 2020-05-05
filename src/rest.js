@@ -1,4 +1,4 @@
-const baseUrl = 'http://localhost:3333';
+const baseUrl = '/';
 
 export function post(target, requestBody) {
   return fetch(baseUrl + '/' + target,
