@@ -32,16 +32,17 @@ const getScores = (req, res) =>
     dbo.collection('visits').find().toArray((err, visits) => {
       if (err) throw err;
       const collapsedVisits = collapseDuplicates(visits);
-      const resJson = collapsedVisits.map(({ score, browser, os, duplicates }) =>
-        ({
-          score,
-          browser,
-          os,
-          ...(duplicates > 1 && {
-            duplicates,
-          }),
-        })
-      );
+      const resJson = collapsedVisits
+        .map(({ score, browser, os, duplicates }) => (
+          {
+            score,
+            browser,
+            os,
+            ...(duplicates > 1 && {
+              duplicates,
+            }),
+          }
+        ));
       res.json(resJson);
       db.close();
     });
@@ -55,37 +56,37 @@ const postGoVerify = async (req, res) => {
     const ua = uaParser(req.headers['user-agent']);
     console.log('user-agent', ua);
 
-    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    const siteVerify = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body,
     });
-    const json = await response.json();
-    console.log('---', 'json', json, '---');
+    const jsonVerify = await siteVerify.json();
+    console.log('---', 'json', jsonVerify, '---');
 
     /* eslint-disable-next-line no-unused-expressions */
-    json.success && MongoClient.connect(process.env.MONGODB_URI, (err, db) => {
+    jsonVerify.success && MongoClient.connect(process.env.MONGODB_URI, (err, db) => {
       if (err) throw err;
       const dbo = db.db(MONGODB_DATABASE);
       const visit = {
-        score: json.score,
+        score: jsonVerify.score,
         browser: `${ua.browser.name} ${ua.browser.major}`,
         browser_version: ua.browser.version,
         os: `${ua.os.name} ${ua.os.version}`,
         engine: `${ua.engine.name} ${ua.engine.version}`,
         ua: req.headers['user-agent'],
-        challenge_timestamp: json.challenge_ts,
+        challenge_timestamp: jsonVerify.challenge_ts,
       };
-      dbo.collection('visits').insertOne(visit, function(err, res) {
+      dbo.collection('visits').insertOne(visit, (err, res) => {
         if (err) throw err;
         console.log('1 document inserted');
         db.close();
       });
     });
 
-    return await res.json(json);
+    return await res.json(jsonVerify);
   } catch (error) {
     console.log('error', error);
 

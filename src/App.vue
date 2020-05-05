@@ -99,6 +99,7 @@
         // TODO: Get the list of breads upon a new day
         if (this.secondsRemaining <= 0) {
           this.updateBreads();
+          grecaptcha('update');
         }
       }, 200);
     },
