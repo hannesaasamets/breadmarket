@@ -69,7 +69,7 @@
 /* eslint-disable */
   // TODO: import `get` and `post` from rest.js
   import { get, post } from './rest';
-  import grecaptcha from './grecaptcha';
+  import { grecaptchaReady, grecaptchaGoVerify } from './grecaptcha';
 
   export default {
     name: 'App',
