@@ -66,7 +66,7 @@
 </template>
 
 <script>
-  /* eslint-disable */
+/* eslint-disable */
   // TODO: import `get` and `post` from rest.js
   import { get, post } from './rest';
 
