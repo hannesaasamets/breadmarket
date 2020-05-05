@@ -162,7 +162,7 @@ app.get('/scores', getScores);
 
 app.post('/go-verify', postGoVerify);
 
-app.use('/', express.static(path.join(__dirname, 'dist')));
+app.use('/', express.static(path.join(__dirname, '../dist')));
 
 app.listen(PORT, () => {
   console.log(`Listening on ${PORT}`);
