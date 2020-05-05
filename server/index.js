@@ -6,6 +6,7 @@ const { getScores, postGoVerify } = require('./go-verify');
 
 const { PORT = 3333 } = process.env;
 const app = express();
+const dayLengthInSeconds = 20;
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -79,15 +80,16 @@ const sellBread = (userId, breadId, saleQuantity) => {
 loadBreads()
   .then(breadsToProducts)
   .then(b => breads = b);
-nextDayUpdate = Date.now() + 60 * 1000;
+
+nextDayUpdate = Date.now() + dayLengthInSeconds * 1000;
 
 setInterval(() => {
   console.log('Restocking breads..');
   loadBreads()
     .then(breadsToProducts)
     .then(b => breads = b);
-  nextDayUpdate = Date.now() + 60 * 1000;
-}, 1000 * 60);
+  nextDayUpdate = Date.now() + dayLengthInSeconds * 1000;
+}, dayLengthInSeconds * 1000);
 
 app.get('/breads', (req, res) => {
   console.log(nextDayUpdate - Date.now());
