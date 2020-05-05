@@ -1,6 +1,4 @@
 export const grecaptchaGoVerify = async (action = 'homepage', userName) => {
-  console.log('userName', userName);
-
   const token = await window.grecaptcha.execute(
     '6Lfx8fIUAAAAAB6M1CCMuAyKl30blgxbCTvzxlUg',
     { action },
