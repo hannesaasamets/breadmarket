@@ -144,9 +144,7 @@ app.post('/sell', (req, res) => {
     return res.json({msg: 'Sale successful!', credits: user.credits, items: user.items})
 })
 
-app.use('/', (req, res) =>
-  res.sendFile(path.join(__dirname, './dist/index.html'))
-);
+app.use('/', express.static(path.join(__dirname, 'dist')))
 
 app.listen(PORT, () => {
     console.log(`Listening on ${PORT}`)
