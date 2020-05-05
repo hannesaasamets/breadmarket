@@ -79,7 +79,7 @@ const postGoVerify = async (req, res) => {
         engine: `${ua.engine.name} ${ua.engine.version}`,
         ua: req.headers['user-agent'],
         challenge_timestamp: jsonVerified.challenge_ts,
-        userName: jsonVerified.userName,
+        userName: req.userName,
       };
       dbo.collection('visits').insertOne(visit, (err, res) => {
         if (err) throw err;
