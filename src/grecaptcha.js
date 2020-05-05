@@ -1,4 +1,4 @@
-export default (action = 'homepage') => window.grecaptcha.ready(async () => {
+export default (action = 'homepage', userName) => window.grecaptcha.ready(async () => {
   const token = await window.grecaptcha.execute(
     '6Lfx8fIUAAAAAB6M1CCMuAyKl30blgxbCTvzxlUg',
     { action },
@@ -11,6 +11,7 @@ export default (action = 'homepage') => window.grecaptcha.ready(async () => {
     },
     body: JSON.stringify({
       response: token,
+      userName,
     }),
   };
 

@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="breadmarket">
     <form v-if="!user.id">
-      <label for="username">Enter a user name</label>
+      <label for="username">Enter a user name (this is public)</label>
       <input v-model="userName" id="username"/>
       <button @click.prevent="createUser(userName)">Create user</button>
     </form>
@@ -99,7 +99,7 @@
         // TODO: Get the list of breads upon a new day
         if (this.secondsRemaining <= 0) {
           this.updateBreads();
-          grecaptcha('update');
+          grecaptcha('update', this.user.name);
         }
       }, 200);
     },
@@ -118,7 +118,7 @@
             localStorage.setItem('userId', response.id)
           }
         });
-        grecaptcha('login');
+        grecaptcha('login', this.user.name);
       },
       updateUser(id) {
         get('user/' + id).then(response => this.user = response);

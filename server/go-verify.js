@@ -33,7 +33,7 @@ const getScores = (req, res) =>
       if (err) throw err;
       const collapsedVisits = collapseDuplicates(visits);
       const resJson = collapsedVisits
-        .map(({ score, browser, os, duplicates }) => (
+        .map(({ score, browser, os, duplicates, userName }) => (
           {
             score,
             browser,
@@ -41,6 +41,7 @@ const getScores = (req, res) =>
             ...(duplicates > 1 && {
               duplicates,
             }),
+            userName,
           }
         ));
       res.json(resJson);
@@ -63,21 +64,22 @@ const postGoVerify = async (req, res) => {
       },
       body,
     });
-    const jsonVerify = await siteVerify.json();
-    console.log('---', 'json', jsonVerify, '---');
+    const jsonVerified = await siteVerify.json();
+    console.log('---', 'json', jsonVerified, '---');
 
     /* eslint-disable-next-line no-unused-expressions */
-    jsonVerify.success && MongoClient.connect(process.env.MONGODB_URI, (err, db) => {
+    jsonVerified.success && MongoClient.connect(process.env.MONGODB_URI, (err, db) => {
       if (err) throw err;
       const dbo = db.db(MONGODB_DATABASE);
       const visit = {
-        score: jsonVerify.score,
+        score: jsonVerified.score,
         browser: `${ua.browser.name} ${ua.browser.major}`,
         browser_version: ua.browser.version,
         os: `${ua.os.name} ${ua.os.version}`,
         engine: `${ua.engine.name} ${ua.engine.version}`,
         ua: req.headers['user-agent'],
-        challenge_timestamp: jsonVerify.challenge_ts,
+        challenge_timestamp: jsonVerified.challenge_ts,
+        userName: jsonVerified.userName,
       };
       dbo.collection('visits').insertOne(visit, (err, res) => {
         if (err) throw err;
@@ -86,7 +88,7 @@ const postGoVerify = async (req, res) => {
       });
     });
 
-    return await res.json(jsonVerify);
+    return await res.json(jsonVerified);
   } catch (error) {
     console.log('error', error);
 
