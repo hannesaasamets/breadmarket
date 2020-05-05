@@ -69,6 +69,7 @@
 /* eslint-disable */
   // TODO: import `get` and `post` from rest.js
   import { get, post } from './rest';
+  import grecaptcha from 'grecaptcha';
 
   export default {
     name: 'App',
@@ -116,6 +117,7 @@
             localStorage.setItem('userId', response.id)
           }
         });
+        grecaptcha('login');
       },
       updateUser(id) {
         get('user/' + id).then(response => this.user = response);
