@@ -26,7 +26,7 @@
               >
                 <td>{{ bread.qty }}</td>
                 <td>{{ bread.name }}</td>
-                <td>{{ formatFinancial(bread.price) }} €</td>
+                <td>{{ formatFinancial(bread.price) }}&nbsp;€</td>
               </tr>
             </table>
           </div>
@@ -56,7 +56,7 @@
               </tr>
             </table>
           </div>
-          <p class="credits">You have {{ formatFinancial(user.credits) }} €</p>
+          <p class="credits">You have {{ formatFinancial(user.credits) }}&nbsp;€</p>
         </div>
       </div>
       <p class="timer" :style="timeLeftStyles">
