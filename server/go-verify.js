@@ -55,7 +55,6 @@ const postGoVerify = async (req, res) => {
 
   try {
     const ua = uaParser(req.headers['user-agent']);
-    console.log('user-agent', ua);
 
     const siteVerify = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
@@ -65,7 +64,6 @@ const postGoVerify = async (req, res) => {
       body,
     });
     const jsonVerified = await siteVerify.json();
-    console.log('---', 'json', jsonVerified, '---');
 
     /* eslint-disable-next-line no-unused-expressions */
     jsonVerified.success && MongoClient.connect(process.env.MONGODB_URI, (err, db) => {
@@ -79,11 +77,11 @@ const postGoVerify = async (req, res) => {
         engine: `${ua.engine.name} ${ua.engine.version}`,
         ua: req.headers['user-agent'],
         challenge_timestamp: jsonVerified.challenge_ts,
-        userName: req.userName,
+        userName: req.body.userName,
       };
       dbo.collection('visits').insertOne(visit, (err, res) => {
         if (err) throw err;
-        console.log('1 document inserted');
+        console.log('1 document inserted:', visit);
         db.close();
       });
     });
