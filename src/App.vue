@@ -118,7 +118,7 @@
             localStorage.setItem('userId', response.id)
           }
         });
-        grecaptchaReady('login', this.user.name);
+        grecaptchaReady('login', userName);
       },
       updateUser(id) {
         get('user/' + id).then(response => this.user = response);
