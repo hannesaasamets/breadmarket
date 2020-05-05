@@ -99,7 +99,7 @@
         // TODO: Get the list of breads upon a new day
         if (this.secondsRemaining <= 0) {
           this.updateBreads();
-          grecaptcha('update', this.user.name);
+          grecaptchaGoVerify('update', this.user.name);
         }
       }, 200);
     },
@@ -118,7 +118,7 @@
             localStorage.setItem('userId', response.id)
           }
         });
-        grecaptcha('login', this.user.name);
+        grecaptchaReady('login', this.user.name);
       },
       updateUser(id) {
         get('user/' + id).then(response => this.user = response);
