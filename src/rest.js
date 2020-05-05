@@ -1,7 +1,5 @@
-const baseUrl = '/';
-
 export function post(target, requestBody) {
-  return fetch(baseUrl + '/' + target,
+  return fetch(target,
     {
       method: 'post', // *GET, POST, PUT, DELETE, etc.
       mode: 'cors', // no-cors, cors, *same-origin
@@ -17,7 +15,7 @@ export function post(target, requestBody) {
 }
 
 export function get(target) {
-  return fetch(baseUrl + '/' + target)
+  return fetch(target)
     .then(stream => stream.json())
     .catch(error => console.error(error));
 }
