@@ -24,29 +24,36 @@ const collapseDuplicates = (objects) => {
   return Object.values(collapsedObjects);
 };
 
-const getScores = (req, res) =>
+const getScores = (req, res) => {
   MongoClient.connect(process.env.MONGODB_URI, (err, db) => {
     if (err) throw err;
     const dbo = db.db(MONGODB_DATABASE);
 
-    dbo.collection('visits').find().toArray((err, visits) => {
-      if (err) throw err;
-      const collapsedVisits = collapseDuplicates(visits);
-      const resJson = collapsedVisits
-        .map(({ score, browser, os, duplicates }) => (
-          {
-            score,
-            browser,
-            os,
-            ...(duplicates > 1 && {
-              duplicates,
-            }),
-          }
-        ));
-      res.json(resJson);
-      db.close();
-    });
+    dbo.collection('visits')
+      .find()
+      .toArray((err, visits) => {
+        if (err) throw err;
+        const collapsedVisits = collapseDuplicates(visits);
+        const resJson = collapsedVisits
+          .map(({ score, browser, os, duplicates, userName, challenge_timestamp }) => (
+            {
+              score,
+              browser,
+              os,
+              ...(duplicates > 1 && {
+                duplicates,
+              }),
+              ...('extended' in req.query && {
+                userName,
+                challenge_timestamp,
+              }),
+            }
+          ));
+        res.json(resJson);
+        db.close();
+      });
   });
+}
 
 const postGoVerify = async (req, res) => {
   const body = `secret=${process.env.CAPTCHA_SECRET}&response=${req.body.response}`;
