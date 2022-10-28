@@ -67,7 +67,7 @@
 
 <script>
   // TODO: import `get` and `post` from rest.js
-  import { get, post } from './rest';
+  import { get, post } from '../utils/rest';
 
   export default {
     name: 'App',
