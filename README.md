@@ -1,13 +1,6 @@
 # Breadmarket
 > A Vue.js project
 
-## Develop in Codesandbox
-Back-End can be run online:  
-https://codesandbox.io/s/cool-dust-mc97i
-
-Front-End can be developped online:  
-https://codesandbox.io/s/github/hannesaasamets/breadmarket
-
 ## Develop locally
 1. Install project dependencies. Presumes you have npm installed (Node Package Manager).
 ```bash
@@ -16,7 +9,7 @@ npm install
 
 2. Run the Back-end. Presumes you have Node installed.
 ```bash
-node server.js
+npm run server
 ``` 
 
 3. Run the Front-End with hot reload at localhost:8080.
