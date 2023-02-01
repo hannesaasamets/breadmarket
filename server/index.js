@@ -36,26 +36,28 @@ const breadsToProducts = (breads) => {
     }))
 }
 
-const purchaseBread = (userId, breadId, purchaseQuantity) => {
+const purchaseBread = (userId, breadId, purchaseQuantity, purchasePrice) => {
     console.log(`attempting to buy bread#${breadId} in quantity ${purchaseQuantity} for user ${userId}`)
     const [user] = users.filter(u => u.id === userId)
     const [bread] = breads.filter(b => b.id === breadId)
     const canAfford = user.credits > (bread.price * purchaseQuantity)
+    const buyAllBreads = Math.floor(user.credits / bread.price)
     const breadInStock = bread.qty > purchaseQuantity
 
     if (!breadInStock) {
         return { error: 'There\'s not enough of these products!', breadId, userId }
     }
     if (!canAfford) {
-        return { error: 'User can\'t afford that product!', userId, breadId }
+        purchaseQuantity = buyAllBreads
     }
+
     bread.qty -= purchaseQuantity;
     user.credits -= (bread.price * purchaseQuantity)
     const [itemInUsersInventory = null] = user.items.filter(item => item.id === breadId)
     if (itemInUsersInventory) {
         itemInUsersInventory.qty += purchaseQuantity;
     } else {
-        user.items.push({id: breadId, qty: purchaseQuantity})
+        user.items.push({id: breadId, qty: purchaseQuantity, purchasePrice: purchasePrice})
     }
     return bread
 }
@@ -127,7 +129,7 @@ app.post('/buy', (req, res) => {
     if (!purchases.length) {
         return res.status(403).json({error: 'Come on, add at least something into your cart!'})
     }
-    const committedBuys = purchases.map(p => purchaseBread(userId, p.id, p.qty))
+    const committedBuys = purchases.map(p => purchaseBread(userId, p.id, p.qty, p.purchasePrice))
     return res.status(200).json({purchases: committedBuys, items: users.filter(u => u.id === userId)[0].items})
 })
 

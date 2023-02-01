@@ -22,11 +22,16 @@
               <tr
                 v-for="(bread, index) in breads"
                 :key="index"
-                @click="buy(bread)"
+                @click="buy(bread, 1)"
               >
                 <td>{{ bread.qty }}</td>
                 <td>{{ bread.name }}</td>
                 <td>{{ formatFinancial(bread.price) }} €</td>
+                <td>
+                  <button @click="buy(bread, bread.qty - 2)" style="font-size: 15px">
+                    Buy all
+                  </button>
+                </td>
               </tr>
             </table>
           </div>
@@ -40,18 +45,22 @@
                 <th>Qty</th>
                 <th>Bread</th>
                 <th>Price</th>
+                <th>Purchased for</th>
               </tr>
               <tr
                 v-for="(myBread, index) in myItems"
                 :key="index"
-                @click="sell(myBread)"
+                @click="sell(myBread, 1)"
               >
                 <!-- display user items -->
-                <td
-                  v-for="col in Object.values(myBread)"
-                  :key="col.id"
-                >
-                  {{ col }}
+                <td>{{ myBread.qty }}</td>
+                <td>{{ myBread.name }}</td>
+                <td>{{ formatFinancial(myBread.price) }}</td>
+                <td>{{ myBread.purchasePrice }}</td>
+                <td>
+                  <button style="font-size: 15px" @click="sell(myBread, myBread.qty - 1)">
+                    Sell all
+                  </button>
                 </td>
               </tr>
             </table>
@@ -126,7 +135,7 @@
           this.breads = response.breads;
         });
       },
-      buy(bread) {
+      buy(bread, qty) {
         //TODO: if item is out of stock, don't fetch
 
         post(
@@ -136,7 +145,8 @@
             "purchases": [
               {
                 "id": bread.id, // ID of bread
-                "qty": 1, // How much of the bread you wish to buy
+                "qty": qty, // How much of the bread you wish to buy
+                "purchasePrice" : bread.price // bread purchase price
               },
             ],
           },
@@ -153,13 +163,13 @@
           this.updateUser(this.user.id)
         });
       },
-      sell(bread) {
+      sell(bread, qty) {
         post(
           'sell',
           {
             "userId": this.user.id, // The id of the user making the purchase
             "id": bread.id, // ID of bread
-            "qty": 1, // How much of the bread you wish to sell
+            "qty": qty, // How much of the bread you wish to sell
           },
         ).then(response => {
           //TODO: "sell" request returns the updated user info, so update the local value
@@ -185,14 +195,20 @@
               name: bread.name,
               price: this.formatFinancial(bread.price),
               id: bread.id,
+              purchasePrice: myBread.purchasePrice
             }
           });
         }
+        else {
+          return null
+        }
       },
       timeLeftStyles() {
-        // TODO: show red when less than 10 seconds remaining
         if (this.secondsRemaining < 10) {
           return { color: 'red' };
+        }
+        else {
+          return null
         }
       },
     },
@@ -235,7 +251,7 @@
       overflow: auto;
       padding-top: 1rem;
       padding-bottom: 1rem;
-      box-shadow: inset 0px 10px 20px -10px rgba(0,0,0, .05),
+      box-shadow: inset 0 10px 20px -10px rgba(0,0,0, .05),
       inset 0px -10px 20px -10px rgba(0,0,0, .05);
     }
 
